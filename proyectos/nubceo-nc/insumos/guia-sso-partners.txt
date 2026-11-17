@@ -1,0 +1,290 @@
+FARMAPAY · INTEGRACIÓN CON PARTNERS
+
+
+Guía de integración SSO para partners
+Evaluación de capacidades y esfuerzo
+Documento de trabajo para relevar arquitectura, dependencias, alcance y estimación de la integración.
+
+
+ Versión             Protocolo disponible                                          Estado del material
+ 1.0                 OIDC · Authorization Code + PKCE S256                         Base para evaluación técnica del partner
+
+
+
+
+Propósito
+Esta guía permite que cada partner identifique las capacidades que debe implementar para integrar el inicio de sesión de
+FarmaPay y estime su esfuerzo. La integración disponible y validada se basa en OpenID Connect (OIDC), con una aplicación
+confidencial cuyo backend canjea el código de autorización. La configuración debe usar PKCE S256.
+El kit de implementación describe una experiencia de acceso desde Comercios: el cliente opera Keycloak y BHUB como
+componentes de identidad y comprobación. El partner integra su aplicación con OIDC y administra en ella sus usuarios,
+sesiones y permisos.
+
+Estado de protocolos
+ Protocolo           Estado                                                        Implicancia para la estimación
+                     Disponible y validado para Authorization Code + PKCE S256
+ OIDC                                                                              Usar como base de alcance y esfuerzo.
+                     y cliente confidencial backend.
+                                                                                   No asumir disponibilidad ni incluirlo como compromiso
+                     Potencial; sujeto a evaluación de viabilidad, alcance y
+ SAML 2.0                                                                          confirmado. Cotizarlo como alternativa condicionada, si
+                     validación conjunta.
+                                                                                   aplica.
+
+
+Material de referencia: Kit de implementación SSO de Comercios hacia aplicaciones de terceros, versión 1.1.3, 26/10/2026.
+
+
+1. Resumen de la integración
+El usuario inicia desde el menú de Comercios y llega a la aplicación del partner ya identificado, siempre que mantenga la
+sesión válida en Comercios. La aplicación inicia el flujo OIDC; Keycloak realiza el intercambio de identidad mediante el
+mecanismo de Comercios y BHUB descrito en el kit. La aplicación recibe un código de un solo uso y lo canjea desde su
+backend por tokens.
+ Componente                                     Responsabilidad principal
+                                                Inicia el acceso desde el menú y aporta la identidad autenticada según la configuración del
+ Comercios / FarmaPay
+                                                cliente.
+ BHUB                                           Emite el comprobante firmado utilizado en el flujo de identidad.
+ Keycloak operado por el cliente                Valida el comprobante, crea o resuelve la identidad y expone OIDC a la aplicación.
+                                                Implementa OIDC en su aplicación, valida tokens, vincula usuarios y controla permisos y sesión
+ Partner
+                                                local.
+
+
+
+
+Experiencia esperada
+•      Acceso normal desde el menú: una pestaña nueva abre la aplicación con el usuario identificado y sin una pantalla
+       adicional de autenticación.
+•      Si el usuario llega directamente sin sesión de Comercios, debe autenticarse allí y luego continuar hacia la aplicación.
+
+
+                                                                                            FarmaPay · Guía de integración SSO para partners | 1
+•      Si cambia el usuario en Comercios desde el mismo navegador, la siguiente autenticación debe resolver al usuario
+       actual.
+•      Ante una falla de identidad o de validación, el acceso debe fallar de forma cerrada; no debe conceder una sesión local.
+
+
+2. Capacidades que debe desarrollar el partner
+ Área                   Capacidad requerida                                                                       Evidencia / definición del partner
+                        Implementar Authorization Code con PKCE S256 y cliente confidencial. El canje
+ Cliente OIDC                                                                                                     Framework/librería, versión y responsable técnico.
+                        del código se realiza desde el backend.
+                        Exponer una ruta de entrada que inicia OIDC directamente y utilizar la URL de
+ Inicio de sesión                                                                                                 Rutas de login y redirect URI por ambiente.
+                        retorno registrada.
+                        Generar y validar state; generar y verificar PKCE; validar nonce cuando
+ Protección del flujo                                                                                             Controles automáticos y manejo de errores.
+                        corresponda al flujo y a la biblioteca.
+                        Verificar firma, issuer, audience, vencimiento y demás validaciones OIDC con
+ Validación de tokens                                                                                             Configuración y pruebas de validación.
+                        una librería mantenida.
+                        Usar el claim sub como identificador estable. En este flujo, sub corresponde al
+ Identidad                                                                                                        Modelo de persistencia y estrategia de asociación.
+                        identificador de usuario de BHUB.
+                        Guardar el secreto del cliente solo en servidor o gestor de secretos. No incluirlo
+ Credenciales                                                                                                     Ubicación, rotación y responsables.
+                        en código de navegador, repositorios ni logs.
+ Sesión local           Crear, renovar y cerrar la sesión propia de la aplicación con políticas del partner.      Duración, expiración, cookies y revocación local.
+                        Resolver roles, permisos, tenants o cuentas en la aplicación. El SSO identifica al
+ Autorización                                                                                                     Matriz de roles y aprovisionamiento.
+                        usuario, no sus permisos de negocio.
+                        Monitorear errores, expiración, cambios de claves y disponibilidad de
+ Operación                                                                                                        Alertas, trazabilidad y soporte.
+                        dependencias; evitar registrar secretos o tokens completos.
+
+
+
+
+3. Arquitectura y límites funcionales
+Flujo de alto nivel
+1. El usuario elige la aplicación en Comercios o accede a su ruta de entrada.
+2. La aplicación redirige al authorization endpoint del issuer acordado, con Authorization Code y PKCE S256.
+3. Comercios y el mecanismo de identidad del cliente completan la autenticación y la validación mediante BHUB.
+4. Keycloak devuelve a la URL registrada un código de autorización de un solo uso.
+5. El backend del partner canjea el código con sus credenciales y el verificador PKCE.
+6. La aplicación valida los tokens, identifica al usuario por sub y aplica sus permisos y su sesión local.
+
+Responsabilidades
+ FarmaPay / cliente                                                                   Partner
+ Informar los parámetros de issuer y client por ambiente mediante el                  Registrar y configurar el cliente OIDC; mantener backend y
+ proceso acordado; configurar el acceso de Comercios y coordinar                      credenciales; validar tokens; asociar usuarios existentes; asignar
+ pruebas del flujo. El cliente opera Keycloak y coordina los valores y                autorización local; proteger sesión, datos y registros; entregar URLs de
+ dependencias con BHUB.                                                               retorno y contactos técnicos.
+
+
+
+
+4. Datos intercambiados y tratamiento
+ Dato / claim                   Uso esperado                                               Consideraciones
+                                                                                           Debe coincidir exactamente con el issuer acordado y la
+ iss                            Identifica al issuer OIDC.
+                                                                                           configuración por ambiente.
+ aud                            Identifica la aplicación destinataria del token.           Validar que incluya el client esperado.
+                                Identificador estable del usuario, derivado del            Usarlo como clave de identidad. No asumir que coincide con un ID
+ sub
+                                id de BHUB.                                                interno del partner.
+                                                                                           Puede no venir y puede repetirse entre usuarios. No vincular
+ email                          Dato de contacto si está disponible.
+                                                                                           cuentas ni conceder acceso basándose solo en este dato.
+ email_verified                 Indica verificación del correo.                            El kit indica false. Tratar el email como no verificado.
+                                                                                                               FarmaPay · Guía de integración SSO para partners | 2
+ Dato / claim             Uso esperado                                      Consideraciones
+ name, given_name,                                                          Los datos provienen de BHUB y se actualizan en cada ingreso; no
+                          Nombre de usuario, si está disponible.
+ family_name                                                                usarlos como identificador.
+ iat, exp y firma         Emisión, expiración e integridad del token.       Validar criptográficamente y respetar vencimientos.
+
+
+
+
+Atributos que no deben asumirse
+•    CUIT, comercio asociado, tenant, cuentas o relaciones comerciales no están garantizados en el token.
+•    Roles y permisos de negocio no se transmiten mediante el SSO descrito; los define el partner.
+•    No se dispone de un logout coordinado que cierre automáticamente la sesión local de todas las aplicaciones.
+•    El flujo descrito no incluye refresh token para la aplicación; el partner debe definir reautenticación o renovación
+     mediante el login OIDC.
+•    La deshabilitación del usuario no notifica en tiempo real a las aplicaciones; un token emitido sigue vigente hasta su
+     expiración y las sesiones locales dependen de la política del partner.
+El kit de referencia establece tokens con una duración de 300 segundos y sesiones de Keycloak de hasta 10 minutos. La
+duración de la sesión local del partner es una decisión propia y debe considerarse en el análisis de riesgo y experiencia de
+salida.
+
+
+5. Vinculación de usuarios existentes
+Si la aplicación ya tiene cuentas, el partner debe definir cómo asociar la identidad OIDC entrante con la cuenta existente. La
+vinculación por email no es segura en este flujo porque el correo no está verificado y puede repetirse.
+ Alternativa               Descripción                                                            Aspectos a estimar
+                           Ante un sub desconocido, solicitar una autenticación o validación
+ Asociación en primer                                                                             UX, seguridad, manejo de cuentas ya
+                           con las credenciales actuales de la aplicación y guardar la
+ acceso                                                                                           vinculadas, soporte y recuperación.
+                           asociación una sola vez.
+                           Importar un mapeo entre sub y el identificador de usuario del
+                                                                                                  Calidad de datos, canal seguro,
+ Carga masiva              partner, sujeto a la disponibilidad y coordinación del listado con
+                                                                                                  conciliación, registros y plan de reversión.
+                           BHUB/FarmaPay.
+                           Crear un perfil del partner ligado al sub cuando no existe usuario     Aprobación, datos obligatorios y
+ Cuentas nuevas
+                           previo.                                                                aprovisionamiento de permisos.
+
+
+
+
+6. Checklist técnico del partner
+☐ Aplicación web con backend capaz de mantener un secreto confidencial.
+☐ Librería OIDC seleccionada y compatible con Authorization Code + PKCE S256.
+☐ Rutas de inicio y retorno definidas; redirect URI exacta por ambiente.
+☐ Validación de state, PKCE, issuer, audience, firma, expiración y nonce según el flujo.
+☐ Persistencia de sub y estrategia de migración/vinculación de usuarios existentes.
+☐ Tratamiento explícito para email ausente, no verificado o duplicado.
+☐ Matriz de permisos locales y decisión sobre aprovisionamiento/desaprovisionamiento.
+☐ Gestión de secreto, rotación, permisos de acceso y exclusión de logs.
+☐ Política de sesión local, expiración, cierre de sesión y reautenticación.
+☐ Observabilidad, alertas, soporte y manejo de indisponibilidad del issuer.
+☐ Ambientes de prueba y producción separados, con configuración y credenciales independientes.
+☐ Pruebas automatizadas y plan de despliegue/reversión acordados.
+
+
+
+
+                                                                                           FarmaPay · Guía de integración SSO para partners | 3
+7. Matriz de estimación de esfuerzo
+Completar por ambiente y distinguir esfuerzo de implementación, configuración, coordinación y validación. Indicar horas o
+días-persona, supuestos y responsable. Los campos quedan editables para que el partner los complete.
+ Paquete de trabajo            Alcance / entregable                                 Esfuerzo           Dependencias / supuestos                     Responsable
+                               Arquitectura, framework, usuarios existentes,
+ Relevamiento                                                                       ____               ____                                         ____
+                               ambientes
+ Configuración OIDC            Client, URLs, secretos, issuer y redirect URI        ____               ____                                         ____
+ Implementación login          Authorization Code + PKCE S256 y callbacks           ____               ____                                         ____
+                               Tokens, claims, state, nonce, protección de
+ Validación y seguridad                                                             ____               ____                                         ____
+                               secretos
+ Vinculación de usuarios       Flujo de enlace o carga/mapeo de cuentas             ____               ____                                         ____
+                               Roles, permisos, comercios/tenants y
+ Autorización local                                                                 ____               ____                                         ____
+                               aprovisionamiento
+                               Sesión local, expiración, reautenticación y UX de
+ Sesión y logout                                                                    ____               ____                                         ____
+                               salida
+                               Casos de prueba, ambientes, evidencia y
+ QA e integración                                                                   ____               ____                                         ____
+                               correcciones
+                               Release, monitoreo, soporte, rollback y
+ Despliegue y operación                                                             ____               ____                                         ____
+                               documentación
+                               Evaluación técnica y prueba de concepto, solo si
+ SAML 2.0 opcional                                                                  ____               Sujeto a validación y decisión separada      ____
+                               se acuerda
+
+
+
+
+Supuestos y dependencias para cerrar la estimación
+☐ Issuer y metadatos OIDC de cada ambiente, entregados por canal acordado.
+☐ Client ID, secreto confidencial y redirect URIs autorizadas por ambiente.
+☐ Disponibilidad de un ambiente de integración y usuarios de prueba.
+☐ Definición de si hay usuarios preexistentes y cómo se vincularán.
+☐ Definición de roles, comercios/tenants y reglas de autorización del partner.
+☐ Contactos de desarrollo, infraestructura, seguridad y soporte de ambas partes.
+☐ Fechas de disponibilidad de FarmaPay/cliente, Keycloak y dependencias de BHUB.
+
+
+8. Casos de prueba de aceptación
+                                                                                                                                                     Evidencia /
+ ID           Escenario                                          Resultado esperado
+                                                                                                                                                     estado
+ T01          Ingreso con sesión activa en Comercios             El usuario llega autenticado a la aplicación; no se crea una identidad distinta.    ____
+ T02          Ingreso directo sin sesión de Comercios            Se completa la autenticación central y se vuelve a la aplicación.                   ____
+ T03          Usuario nuevo para el partner                      Se resuelve por sub y se aplica el proceso de alta o asociación acordado.           ____
+ T04          Usuario existente vinculado                        La cuenta correcta se asocia sin depender del email como clave.                     ____
+ T05          Email ausente, duplicado o no verificado           No se produce vinculación automática ni elevación de acceso por email.              ____
+                                                                 La siguiente sesión corresponde al usuario actual; no persiste la identidad
+ T06          Cambio de usuario en navegador compartido                                                                                              ____
+                                                                 anterior.
+              Token alterado, expirado o issuer/audience
+ T07                                                             La aplicación rechaza el token y no abre sesión.                                    ____
+              incorrectos
+ T08          State o verificador PKCE inválido                  La respuesta se rechaza; no se consume un código ajeno.                             ____
+ T09          Secreto o credencial incorrectos                   El canje falla de forma segura y no expone credenciales en cliente ni logs.         ____
+                                                                 Se aplica la política acordada y se recupera el acceso según la sesión central
+ T10          Sesión local expirada y nueva autenticación                                                                                            ____
+                                                                 vigente.
+                                                                 Se cierra la sesión local; se documenta que el logout centralizado no está
+ T11          Logout de la aplicación                                                                                                                ____
+                                                                 coordinado.
+ T12          Indisponibilidad del issuer                        El acceso falla de forma cerrada y se registra/alerta según el diseño operativo.    ____
+                                                                 Permisos efectivos son los definidos por el partner; no se presumen claims de
+ T13          Autorización por rol/cuenta                                                                                                            ____
+                                                                 rol.
+
+
+
+
+                                                                                                              FarmaPay · Guía de integración SSO para partners | 4
+9. Decisiones pendientes y próximos pasos
+☐ Partner completa la matriz de capacidades, dependencias, esfuerzo y responsables.
+☐ FarmaPay y partner confirman alcance OIDC, ambientes, issuer, client y ventana de pruebas.
+☐ El partner documenta la estrategia de asociación de usuarios y autorización local.
+☐ Ambas partes acuerdan criterios de aceptación, responsables de soporte y plan de despliegue.
+☐ Si existe una necesidad de SAML 2.0, se registra como evaluación separada: caso de uso, capacidades requeridas,
+dependencias, prueba de concepto y criterios de validación. La evaluación no implica disponibilidad comprometida.
+
+Información a devolver por el partner
+Campo                                                Respuesta
+Nombre de la aplicación                              ________________________________________________
+Contacto técnico y de seguridad                      ________________________________________________
+Framework / tecnología                               ________________________________________________
+Ambientes y fechas objetivo                          ________________________________________________
+Usuarios preexistentes y estrategia de vinculación   ________________________________________________
+Dependencias y riesgos                               ________________________________________________
+Esfuerzo total estimado y supuestos                  ________________________________________________
+Necesidad de evaluar SAML 2.0 (sí/no y motivo)       ________________________________________________
+
+
+
+
+                                                                                        FarmaPay · Guía de integración SSO para partners | 5
+
