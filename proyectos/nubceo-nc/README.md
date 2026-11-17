@@ -40,9 +40,20 @@ Propuesta a **Nubceo** (partner) para el **Calendario de Notas de Crédito (NC)*
 - El token **no** trae CUIT, comercio, tenant ni roles. No hay refresh token ni logout coordinado. Tokens de 300 s y sesión Keycloak de 10 min.
 - Entregables del partner: checklist técnico (§6), matriz de esfuerzo (§7), casos T01–T13 (§8) y formulario de devolución (§9).
 
-## Decisiones / pendientes
-- [ ] Formato y audiencia de la propuesta
-- [ ] Alcance: ¿qué construye Nubceo y qué aporta FarmaPay (datos de NC, API)?
+## Entregables
+- **Documento de propuesta (Claude Docs):** https://claude.ai/artifact/LYNCVyyPzwpwgnLqsWPVjx
+  Secciones: resumen, problema, solución pantalla por pantalla, reparto de roles, datos requeridos, SSO (diagrama), plan y matriz de esfuerzo, criterios de aceptación (C01–C08, T01–T13), riesgos y próximos pasos.
+
+## Decisiones
+- 2026-11-17: **Nubceo construye** el calendario; FarmaPay aporta el prototipo, las especificaciones y el SSO.
+- 2026-11-17: el formato es un **documento** (no deck), para audiencia de **negocio + técnica**.
+
+## Pendientes
+- [ ] Confirmar qué fecha ubica la NC en el calendario: emisión (supuesto actual) o fecha teórica de liquidación.
+- [ ] Regla de cálculo del monto NC (PUP × cobertura vs. importe NC laboratorio).
+- [ ] Estados posibles de una NC.
+- [ ] Mapeo usuario → farmacia → lotes en Nubceo (el token SSO no lo trae).
 
 ## Historial
 - 2026-11-17: arranque del proyecto, carga de insumos.
+- 2026-11-17: primera versión del documento de propuesta.
