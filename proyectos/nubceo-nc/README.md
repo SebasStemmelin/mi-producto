@@ -44,6 +44,10 @@ Propuesta a **Nubceo** (partner) para el **Calendario de Notas de Crédito (NC)*
 - **Documento de propuesta (Claude Docs):** https://claude.ai/artifact/LYNCVyyPzwpwgnLqsWPVjx
   Secciones: resumen, problema, solución pantalla por pantalla, reparto de roles, datos requeridos, SSO (diagrama), plan y matriz de esfuerzo, criterios de aceptación (C01–C08, T01–T13), riesgos y próximos pasos.
 
+- **Prototipo navegable (artifact):** https://claude.ai/artifact/GMQmyjfdtXmqVcZozjKgKG
+  Fuente: `prototipo/calendario-nc.html`. Replica el video y la imagen de flujo. Los links por pantalla son `#inicio`, `#calendarios`, `#calendarios-creditos`, `#creditos-2`, `#ingresos-2` y `#nc-67210334`.
+  Los datos de demo cierran con el video: ingresos $1.897.057, NC $1.213.545,31 (28 NC, 4 financiadores) y consolidado $3.110.602,31.
+
 ## Decisiones
 - 2026-11-17: **Nubceo construye** el calendario; FarmaPay aporta el prototipo, las especificaciones y el SSO.
 - 2026-11-17: el formato es un **documento** (no deck), para audiencia de **negocio + técnica**.
@@ -57,3 +61,4 @@ Propuesta a **Nubceo** (partner) para el **Calendario de Notas de Crédito (NC)*
 ## Historial
 - 2026-11-17: arranque del proyecto, carga de insumos.
 - 2026-11-17: primera versión del documento de propuesta.
+- 2026-11-17: prototipo navegable publicado y enlazado desde el documento.
