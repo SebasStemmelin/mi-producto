@@ -48,6 +48,18 @@ Propuesta a **Nubceo** (partner) para el **Calendario de Notas de Crédito (NC)*
   Fuente: `prototipo/calendario-nc.html`. Replica el video y la imagen de flujo. Los links por pantalla son `#inicio`, `#calendarios`, `#calendarios-creditos`, `#creditos-2`, `#ingresos-2` y `#nc-67210334`.
   Los datos de demo cierran con el video: ingresos $1.897.057, NC $1.213.545,31 (28 NC, 4 financiadores) y consolidado $3.110.602,31.
 
+- **Presentación de producto (Slides):** https://claude.ai/artifact/F3AN5CvcU2B1nG1JP9ow4T
+  Fuente: `presentacion/project/`. Tiene 13 slides (contexto, problema, T+1, rol de FarmaPay, propuesta, experiencia, datos, SSO, visión del "frontend del tesorero", roles y próximos pasos), con notas del orador.
+
+## Reunión 2026-11-17 (Nubceo: Santiago, Fernanda, Silvana, Luciano, Agustina)
+- Transcripción en `insumos/reunion-2026-11-17-transcripcion.*`.
+- Las NC las emite Farmalink (lo usa ~90% de la industria). Son crédito en la cuenta corriente de la droguería para productos de un laboratorio.
+- Objetivo de la industria: adelantar la NC del laboratorio de 60–120 días a T+1, con checks antifraude (receta digital, transacción FarmaPay, software de gestión).
+- La visión de Nubceo es ser el "frontend del tesorero", y las NC encajan. A futuro: pagar a droguerías con NC y financiar.
+- Nubceo ya implementó SSO (Active Directory, para otro cliente). La estructura técnica "no es de cero".
+- Próximos pasos: FarmaPay comparte los 2 docs de SSO y el set de datos de NC (validar con Juan). Nubceo arma su propuesta de SSO y analiza la viabilidad. La mesa de industria sería en enero (la industria cierra del 15/20 de diciembre al 5 de enero).
+- Optimizador fiscal / alertas: idea para más adelante, menos prioritaria.
+
 ## Decisiones
 - 2026-11-17: **Nubceo construye** el calendario; FarmaPay aporta el prototipo, las especificaciones y el SSO.
 - 2026-11-17: el formato es un **documento** (no deck), para audiencia de **negocio + técnica**.
@@ -62,3 +74,4 @@ Propuesta a **Nubceo** (partner) para el **Calendario de Notas de Crédito (NC)*
 - 2026-11-17: arranque del proyecto, carga de insumos.
 - 2026-11-17: primera versión del documento de propuesta.
 - 2026-11-17: prototipo navegable publicado y enlazado desde el documento.
+- 2026-11-18: transcripción de la reunión cargada; presentación de producto publicada.
